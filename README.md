@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # beyondbell-frontend
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -36,3 +37,6 @@ npm run dev
 ```sh
 npm run build
 ```
+=======
+# BeyondBell
+>>>>>>> a069a2f58ca6e73ac836db976986d768648aeb1a
