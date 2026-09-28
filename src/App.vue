@@ -13,6 +13,8 @@ const sortBy = ref("subject");
 // Stores the sorting direction.
 // Default value is ascending.
 const sortOrder = ref("ascending");
+//                                  Add to Cart
+const cart = ref([]);
 
 //                                Categories Data
 
@@ -193,7 +195,7 @@ const lessons = ref([
   },
 ]);
 
-//                              Sorted Lesson
+//                                          Sorting Lesson
 
 // computed() creates a derived value.
 // Whenever sortBy or sortOrder changes,
@@ -239,6 +241,13 @@ const sortedLessons = computed(() => {
   // Return the sorted array.
   return result;
 });
+//                                        Add to cart function
+function addToCart(lesson) {
+  if (lesson.spaces > 0) {
+    cart.value.push(lesson);
+    lesson.spaces--;
+  }
+}
 </script>
 
 <template>
@@ -261,9 +270,12 @@ const sortedLessons = computed(() => {
       </nav>
 
       <div class="nav-actions">
-        <button class="cart-button">
+        <button class="cart-button" :disabled="cart.length === 0">
           🛒
-          <span class="cart-count">0</span>
+
+          <span class="cart-count">
+            {{ cart.length }}
+          </span>
         </button>
 
         <button class="sign-in-button">Sign In</button>
@@ -427,9 +439,20 @@ const sortedLessons = computed(() => {
               <p class="lesson-info">👤 {{ lesson.teacher }}</p>
 
               <div class="lesson-bottom">
-                <span class="spaces"> {{ lesson.spaces }} spaces left </span>
+                <span class="spaces">
+                  {{
+                    lesson.spaces === 0
+                      ? "Fully booked"
+                      : lesson.spaces + " spaces left"
+                  }}
+                </span>
 
-                <button>🛒 Add to Cart</button>
+                <button
+                  @click="addToCart(lesson)"
+                  :disabled="lesson.spaces === 0"
+                >
+                  {{ lesson.spaces === 0 ? "Sold Out" : "🛒 Add to Cart" }}
+                </button>
               </div>
             </div>
           </article>

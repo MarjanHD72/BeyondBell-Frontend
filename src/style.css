@@ -64,7 +64,10 @@
 
   font-size: 20px;
 }
-
+.cart-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .cart-count {
   position: absolute;
 
@@ -568,6 +571,12 @@
   justify-content: space-between;
 
   border-top: 1px solid #edf0f4;
+}
+.lesson-bottom button:disabled {
+  background-color: #b8c0cc;
+  color: #ffffff;
+
+  cursor: not-allowed;
 }
 
 .spaces {
