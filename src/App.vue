@@ -18,6 +18,23 @@ const cart = ref([]);
 
 //view cart controls
 const showCart = ref(false);
+
+// Checkout details
+const customerName = ref("");
+const customerPhone = ref("");
+
+// Stores the order confirmation message
+// const orderMessage = ref("");
+const orderPlaced = ref(false);
+// inputs validations
+const nameIsValid = computed(() => {
+  return /^[A-Za-z ]+$/.test(customerName.value);
+});
+
+const phoneIsValid = computed(() => {
+  return /^[0-9]+$/.test(customerPhone.value);
+});
+
 //                                Categories Data
 
 // Stores the category information shown on the homepage.
@@ -271,6 +288,15 @@ const cartTotal = computed(() => {
   }, 0);
 });
 
+// Checks if the name and phone number are valid
+const isCheckoutValid = computed(() => {
+  if (customerName.value === "" || customerPhone.value === "") {
+    return false;
+  }
+
+  return nameIsValid.value && phoneIsValid.value;
+});
+
 //                                        Add to cart function
 function addToCart(lesson) {
   if (lesson.spaces > 0) {
@@ -300,6 +326,22 @@ function removeFromCart(lessonId) {
     cart.value.splice(itemIndex, 1);
   }
 }
+function toggleCart() {
+  showCart.value = !showCart.value;
+}
+// Placing Order
+function placeOrder() {
+  if (!isCheckoutValid.value) {
+    return;
+  }
+
+  orderPlaced.value = true;
+
+  cart.value = [];
+
+  customerName.value = "";
+  customerPhone.value = "";
+}
 </script>
 
 <template>
@@ -322,7 +364,11 @@ function removeFromCart(lessonId) {
       </nav>
 
       <div class="nav-actions">
-        <button class="cart-button" @click="showCart = true">
+        <button
+          class="cart-button"
+          :disabled="cart.length === 0"
+          @click="toggleCart"
+        >
           🛒
 
           <span class="cart-count">
@@ -514,102 +560,167 @@ function removeFromCart(lessonId) {
       </template>
       <!-- Cart View -->
       <section v-if="showCart" class="cart-section">
-        <div class="cart-header">
-          <div>
-            <p class="small-heading">YOUR BASKET</p>
+        <div v-if="!orderPlaced">
+          <div class="cart-header">
+            <div>
+              <p class="small-heading">YOUR BASKET</p>
 
-            <h2>Shopping Cart</h2>
+              <h2>Shopping Cart</h2>
 
-            <p>{{ cart.length }} spaces selected</p>
+              <p>{{ cart.length }} spaces selected</p>
+            </div>
+
+            <button class="back-button" @click="showCart = false">
+              ← Continue Shopping
+            </button>
           </div>
 
-          <button class="back-button" @click="showCart = false">
-            ← Continue Shopping
-          </button>
-        </div>
+          <div class="cart-layout">
+            <!-- Cart Items -->
+            <div class="cart-items">
+              <template v-if="cartItems.length > 0">
+                <article
+                  v-for="item in cartItems"
+                  :key="item.id"
+                  class="cart-item"
+                >
+                  <img
+                    :src="item.image"
+                    :alt="item.subject"
+                    class="cart-item-image"
+                  />
 
-        <div class="cart-layout">
-          <!-- Cart Items -->
-          <div class="cart-items">
-            <template v-if="cartItems.length > 0">
-              <article
-                v-for="item in cartItems"
-                :key="item.id"
-                class="cart-item"
-              >
-                <img
-                  :src="item.image"
-                  :alt="item.subject"
-                  class="cart-item-image"
+                  <div class="cart-item-info">
+                    <span class="cart-item-type">
+                      {{ item.type }}
+                    </span>
+
+                    <h3>
+                      {{ item.subject }}
+                    </h3>
+
+                    <p>📍 {{ item.location }}</p>
+
+                    <p>👤 {{ item.teacher }}</p>
+                  </div>
+
+                  <div class="cart-item-details">
+                    <p>
+                      Quantity:
+                      <strong>{{ item.quantity }}</strong>
+                    </p>
+
+                    <p class="cart-price">£{{ item.price * item.quantity }}</p>
+
+                    <button
+                      class="remove-button"
+                      @click="removeFromCart(item.id)"
+                    >
+                      Remove One
+                    </button>
+                  </div>
+                </article>
+              </template>
+              <!-- Empty basket message -->
+              <div v-else class="empty-cart">
+                <div class="empty-cart-icon">🛒</div>
+
+                <h3>Your basket is empty</h3>
+
+                <p>Add a class or activity to get started.</p>
+
+                <button @click="showCart = false">
+                  Browse Classes & Activities
+                </button>
+              </div>
+            </div>
+
+            <!-- Order Summary -->
+            <aside class="cart-summary">
+              <h3>Order Summary</h3>
+
+              <div class="summary-row">
+                <span> Spaces </span>
+
+                <span>
+                  {{ cart.length }}
+                </span>
+              </div>
+
+              <div class="summary-row total-row">
+                <strong>Total</strong>
+                <strong>£{{ cartTotal }}</strong>
+              </div>
+
+              <!-- Checkout Details -->
+              <div class="cart-checkout">
+                <h3>Checkout</h3>
+
+                <label for="customer-name"> Full Name </label>
+
+                <input
+                  id="customer-name"
+                  v-model.trim="customerName"
+                  type="text"
+                  placeholder="Enter your full name"
                 />
 
-                <div class="cart-item-info">
-                  <span class="cart-item-type">
-                    {{ item.type }}
-                  </span>
+                <p
+                  v-if="customerName && !nameIsValid"
+                  class="validation-message"
+                >
+                  Enter a name using letters and spaces only.
+                </p>
 
-                  <h3>
-                    {{ item.subject }}
-                  </h3>
+                <label for="customer-phone"> Phone Number </label>
 
-                  <p>📍 {{ item.location }}</p>
+                <input
+                  id="customer-phone"
+                  v-model="customerPhone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                />
 
-                  <p>👤 {{ item.teacher }}</p>
-                </div>
+                <p
+                  v-if="customerPhone && !phoneIsValid"
+                  class="validation-message"
+                >
+                  Enter a phone number using digits only.
+                </p>
 
-                <div class="cart-item-details">
-                  <p>
-                    Quantity:
-                    <strong>{{ item.quantity }}</strong>
-                  </p>
-
-                  <p class="cart-price">£{{ item.price * item.quantity }}</p>
-
-                  <button
-                    class="remove-button"
-                    @click="removeFromCart(item.id)"
-                  >
-                    Remove One
-                  </button>
-                </div>
-              </article>
-            </template>
-            <!-- Empty basket message -->
-            <div v-else class="empty-cart">
-              <div class="empty-cart-icon">🛒</div>
-
-              <h3>Your basket is empty</h3>
-
-              <p>Add a class or activity to get started.</p>
-
-              <button @click="showCart = false">
-                Browse Classes & Activities
-              </button>
-            </div>
+                <button
+                  class="place-order-button"
+                  :disabled="!isCheckoutValid"
+                  @click="placeOrder"
+                >
+                  Checkout
+                </button>
+              </div>
+            </aside>
           </div>
+        </div>
 
-          <!-- Order Summary -->
-          <aside class="cart-summary">
-            <h3>Order Summary</h3>
+        <!-- Order Confirmation -->
+        <div v-else class="order-success">
+          <div class="success-icon">✓</div>
 
-            <div class="summary-row">
-              <span> Spaces </span>
+          <h2>Order Confirmed</h2>
 
-              <span>
-                {{ cart.length }}
-              </span>
-            </div>
+          <p>Your order has been submitted successfully.</p>
 
-            <div class="summary-row total-row">
-              <strong> Total </strong>
-
-              <strong> £{{ cartTotal }} </strong>
-            </div>
-
-            <button class="checkout-button">Continue to Checkout</button>
-          </aside>
+          <button
+            class="back-button"
+            @click="
+              orderPlaced = false;
+              showCart = false;
+            "
+          >
+            Back to Classes
+          </button>
         </div>
       </section>
+
+      <!-- Checkout View -->
     </main>
   </div>
 </template>
